@@ -1,0 +1,22 @@
+#! /bin/sh
+ifort -c time_elapsed.f90
+ifort -c time_print.f90
+ifort -c kernel.f90
+ifort -c eos.f90
+ifort -c internal_force.f90
+ifort -c density.f90
+ifort -c direct_find.f90
+ifort -c hsml.f90
+ifort -c av_vel.f90
+ifort -c art_heat.f90
+ifort -c art_visc.f90
+ifort -c external_force.f90
+ifort -c viscosity.f90
+ifort -c virt_part.f90
+ifort -c single_step.f90
+ifort -c time_integration.f90
+ifort -c input.f90
+ifort -c output.f90
+ifort -c loguns.f90
+ifort -c logun.f90
+ifort sph.o input.o output.o time_integration.o single_step.o logun.o loguns.o virt_part.o viscosity.o external_force.o art_visc.o art_heat.o av_vel.o hsml.o direct_find.o density.o internal_force.o eos.o kernel.o time_elapsed.o time_print.o -o sph
