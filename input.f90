@@ -274,7 +274,8 @@ REAL(KIND=8) :: x1, y1, dx, dy
      p(i)= 0.
      u(i)=357.1
      itype(i) = 2
-     hsml(i) = dx
+     hsml(i) = dx                    
+!     hsml(i)=3*dx                       ! Determine if can remove error
 
   END DO                                ! End Do Loop 2
 

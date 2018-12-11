@@ -145,6 +145,7 @@ niac = 0
         WRITE (*,*) '**** Average :',real(sumiac)/real(ntotal)
         WRITE (*,*) '**** Total pairs : ',niac
         WRITE (*,*) '**** Particles with no interactions:',noiac
+        WRITE (*,*) '**** Distance between particles i and j:', r               !included
      END IF                                     ! End If Loop 5.1
 
   END IF                                        ! End If Loop 5

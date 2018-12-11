@@ -25,6 +25,7 @@ INCLUDE 'param.inc.txt'
 
 INTEGER :: ntotal
 INTEGER :: itype(maxn)
+!INTEGER, INTENT(OUT) :: maxtimestep                  !included
 
 REAL(KIND=8) :: x(dim,maxn)
 REAL(KIND=8) :: vx(dim, maxn)
@@ -41,6 +42,8 @@ REAL(KIND=8) :: dt
 ! Data dictionary: declare local variable types
 
 INTEGER :: maxtimestep, d, m, i, yesorno
+INTEGER :: numx, numy                           !included
+!INTEGER ::  d, m, i, yesorno                   !included
 REAL(KIND=8) :: s1, s2
 
 
@@ -57,15 +60,21 @@ CALL input ( x, vx, mass, rho, p, u, itype, hsml, ntotal )
   WRITE(*,*)' Please input the maximal time steps '
   WRITE(*,*)' ***************************************************'
   READ(*,*) maxtimestep
+  WRITE(*,*)' For interpolation into mesh, please select number of grid in x-direction '
+  READ(*,*) numx
+  WRITE(*,*)' For interpolation into mesh, please select number of grid in y-direction '
+  READ(*,*) numy
 
-CALL time_integration ( x, vx, mass, rho, p, u, c, s, e, itype, hsml, ntotal, maxtimestep, dt )
-CALL output ( x, vx, mass, rho, p, u, c, itype, hsml, ntotal ,dt )       !included dt
+CALL time_integration ( x, vx, mass, rho, p, u, c, s, e, itype, hsml, ntotal, maxtimestep, numx, numy, dt )
+CALL output ( x, vx, mass, rho, p, u, c, itype, hsml, ntotal, maxtimestep, numx, numy,  dt )       !included dt,num  and maxtimestep
+
 
 WRITE(*,*)' ***************************************************'
 WRITE(*,*) 'Are you going to run more time steps ? (0=No, 1=yes)'
 READ (*,*) yesorno
 
 IF (yesorno.NE.0) GO TO 1
+
 
 CALL time_print
 CALL time_elapsed(s2)

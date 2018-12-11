@@ -1,4 +1,5 @@
-SUBROUTINE time_integration ( x, vx, mass, rho, p, u, c, s, e, itype, hsml, ntotal, maxtimestep, dt )
+SUBROUTINE time_integration ( x, vx, mass, rho, p, u, c, s, e, itype, hsml, ntotal, maxtimestep, numx, numy,&
+dt )
 !
 ! x           : coordinates of particles [input/output]
 ! vx          : velocities of particles [input/output]
@@ -39,6 +40,8 @@ REAL(KIND=8),INTENT(INOUT) :: hsml(maxn)
 REAL(KIND=8),INTENT(OUT) :: c(maxn)
 REAL(KIND=8),INTENT(OUT) :: s(maxn)
 REAL(KIND=8),INTENT(OUT) :: e(maxn)
+REAL(KIND=8),INTENT(IN) :: numx                      ! included for mesh
+REAL(KIND=8),INTENT(IN) :: numy                      ! included for mesh
 
 ! Data dictionary: declare local variable types
 
@@ -197,7 +200,7 @@ REAL(KIND=8) :: time, temp_rho, temp_u
 !    If Inner-Loop 2.4
      IF (mod(itimestep,save_step).EQ.0) THEN
 
-        CALL output( x, vx, mass, rho, p, u, c, itype, hsml, ntotal ,dt)          !included dt
+        CALL output( x, vx, mass, rho, p, u, c, itype, hsml, ntotal, maxtimestep , numx, numy, dt)          !included dt and num
 
      END IF                                     ! End If Inner-Loop 2.4
 

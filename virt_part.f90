@@ -68,7 +68,7 @@ REAL(KIND=8) :: x1, dx, v_inf
   ELSE
 
      nvirt = 0
-     mp = 40
+     mp = 40 
      x1 = 1.0e-3
      dx = x1 / mp
      v_inf = 1.e-3
@@ -146,7 +146,7 @@ REAL(KIND=8) :: x1, dx, v_inf
      OPEN(2,file="../data/state_vp.dat")
      OPEN(3,file="../data/other_vp.dat")
 
-     WRITE(1,*) nvirt
+     !WRITE(1,*) nvirt                                  !excluded
 
 !    Do Inner-Loop 2.1
      DO i = ntotal + 1, ntotal + nvirt

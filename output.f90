@@ -1,4 +1,4 @@
-SUBROUTINE output( x, vx, mass, rho, p, u, c, itype, hsml, ntotal, dt )
+SUBROUTINE output( x, vx, mass, rho, p, u, c, itype, hsml, ntotal, maxtimestep, numx, numy, dt )
 !
 ! Subroutine for saving particle information to external disk file
 !
@@ -26,6 +26,8 @@ INCLUDE 'param.inc.txt'
 INTEGER, INTENT(IN) :: itype(maxn)
 INTEGER, INTENT(IN) :: ntotal
 !INTEGER, INTENT(IN) :: nvirt                    ! INCLUDED nvirt
+INTEGER, INTENT(IN) :: maxtimestep               ! INCLUDED maxtimestep
+INTEGER, INTENT(IN) :: numx, numy                ! INCLUDED num
 
 REAL(KIND=8), INTENT(IN) :: x(dim, maxn)
 REAL(KIND=8), INTENT(IN) :: vx(dim, maxn)
@@ -37,6 +39,8 @@ REAL(KIND=8), INTENT(IN) :: c(maxn)
 REAL(KIND=8), INTENT(IN) :: hsml(maxn)
 REAL(KIND=8), INTENT(IN) :: dt                           ! INCLUDED
 !REAL(KIND=8), INTENT(IN) :: gamma                       ! INCLUDED
+
+CHARACTER(len=30) :: fxv, fstate, fother, fmeshxv                         ! INCLUDED
 
 !!!!! From Daniel Price
 ! data dictionary
@@ -51,11 +55,35 @@ character(len=12) :: geom
 !!!!!!!!!!! From Lius
 ! Data dictionary: declare local variable types
 
-INTEGER :: i, d, npart
+INTEGER :: i, d, npart                       
 
-OPEN(1,file="../data/f_xv.dat")
-OPEN(2,file="../data/f_state.dat")
-OPEN(3,file="../data/f_other.dat")
+!!!!!!! FROM JIAMIN
+! Data dictionary: interpolating to mesh 
+INTEGER :: mi, miy, mix, n              
+REAL(KIND=8) :: x1, y1, lx, ly                         
+REAL(KIND=8) :: sum_vxx(maxm), sum_vxy(maxm), avg_vxx(maxm), avg_vxy(maxm)  
+REAL(KIND=8) :: mistart(dim,maxm), miend(dim,maxm), mimid(dim,maxm)              
+
+x1 = 1.E-3
+y1 = 1.E-3
+lx = x1/numx
+ly = y1/numy
+
+ write(fxv,"('../data/f_xv',i6.6,'.dat')") maxtimestep
+ write(fstate,"('../data/f_state',i6.6,'.dat')") maxtimestep
+ write(fother,"('../data/f_other',i6.6,'.dat')") maxtimestep
+!write(dumpfile,"('sph_',i5.5,'.dat')") ifile
+
+
+OPEN(1, file=fxv, status='replace')
+OPEN(2, file=fstate, status='replace')
+OPEN(3, file=fother, status='replace')
+
+
+!OPEN(1,file="../data/f_xv.dat") 
+!OPEN(2,file="../data/f_state.dat")
+!OPEN(3,file="../data/f_other.dat")
+
 
 !WRITE(1,*) ntotal
 
@@ -68,7 +96,6 @@ OPEN(3,file="../data/f_other.dat")
   
   END DO                                ! End Do Loop 1
 
-!!!!! YLI (09/19/2018)
 1001 format(1x, I6, 6(2x, E15.8))
 1002 format(1x, I6, 7(2x, E15.8))
 1003 format(1x, I6, 2x, I4, 2x, E15.8)
@@ -79,6 +106,79 @@ OPEN(3,file="../data/f_other.dat")
 !CLOSE(1)
 !CLOSE(2)
 !CLOSE(3)
+
+!!!!!!!! Write data to num x num mesh
+! If Loop A1
+  IF ((numx.GT.0).AND.(numy.GT.0)) THEN
+
+     WRITE(fmeshxv,"('../data/fmesh_xv',i6.6,'.dat')") maxtimestep
+
+     OPEN(4, file=fmeshxv, status='replace')
+   
+!    Do Loop A1.1
+     DO mix = 1, numx
+        
+        DO miy = 1, numy   
+
+           mi = miy+(mix-1)*numx
+
+           mistart(1, mi) = (mix-1)*lx
+           miend(1,mi)= mix*lx
+           mistart(2,mi) = (miy-1)*ly
+           miend(2,mi) = miy*ly
+
+           mimid(1,mi)=(mistart(1,mi)+miend(1,mi))/2
+           mimid(2,mi)=(mistart(2,mi)+miend(2,mi))/2
+
+           n = 0
+           sum_vxx(mi)=0
+           sum_vxy(mi)=0
+
+            !READ(1,*)  i, (x(d, i), d=1,dim), (vx(d, i), d = 1, dim)
+
+           DO i=1,ntotal
+
+              IF (x(1,i).GE.mistart(1,mi).AND.x(1,i).LE.miend(1,mi)) THEN
+                
+                 IF (x(2,i).GE.mistart(2,mi).AND.x(2,i).LE.miend(2,mi)) THEN
+
+                     n=n+1
+                     sum_vxx(mi) = sum_vxx(mi)+vx(1,i)
+                     sum_vxy(mi) = sum_vxy(mi)+vx(2,i)
+                 END IF
+
+              END IF
+
+           END DO     
+        
+           IF (n.GT.0) THEN 
+              avg_vxx(mi) = sum_vxx(mi)/n
+              avg_vxy(mi) = sum_vxy(mi)/n
+          
+           ELSE 
+              avg_vxx(mi) = 0 
+              avg_vxy(mi) = 0
+
+           END IF
+
+                    
+           !WRITE(4,1004) mi, n, (mimid(d, mi), d = 1, dim), avg_vxx(mi), avg_vxy(mi), mistart(1, mi), miend(1,mi), mistart(2,mi), miend(2,mi)
+           WRITE(4,1004) mi, n, (mimid(d, mi), d = 1, dim), avg_vxx(mi), avg_vxy(mi)
+           1004 FORMAT(1x, I6, 2x, I6,  4(2x, E15.8))
+           !1004 FORMAT(1x, I6, 2x, I6, 4(2x, E15.8), 2(E11.4' , 'E11.4))
+
+          
+
+        END DO   
+
+     END DO
+    
+  ELSE 
+
+         WRITE(*,*) '**********************************************************'
+         WRITE(*,*) 'Interpolating to mesh is not selected.'
+  
+  END IF
 
 !!!!!!!!!!!!! From Daniel Price
 
@@ -96,7 +196,7 @@ hfact = 2.0       !fac from liu's
 !
 
  ifile = ifile + 1
- write(dumpfile,"('sph_',i5.5,'.dat')") ifile
+ write(dumpfile,"('../splashdata/sph_',i5.5,'.dat')") ifile
 
 npart = ntotal
 
@@ -152,10 +252,6 @@ if (idumpghost.eq.1) then
 !--write the data (primitive variables) to the data file
 !  data is written in two blocks :
 
-! 
-! 1) essential variables needed to restart the code
-! 2) variables that are output for information only
-!
 ! MHD variables are written after the hydro ones in 
 ! each case
 !
@@ -237,5 +333,6 @@ if (idumpghost.eq.1) then
 CLOSE(1)
 CLOSE(2)
 CLOSE(3)
+CLOSE(4)
 
 END SUBROUTINE output
